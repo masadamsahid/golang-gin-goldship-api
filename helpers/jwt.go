@@ -33,6 +33,8 @@ func CreateAuthToken(claims AuthTokenClaims) (string, error) {
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":       claims.ID,
 		"username": claims.Username,
+		"email":    claims.Email,
+		"role":     claims.Role,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
 	// log.Println("Token claim", tokenClaims)

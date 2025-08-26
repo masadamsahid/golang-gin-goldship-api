@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/auth"
+	"github.com/masadamsahid/golang-gin-goldship-api/modules/branches"
 )
 
 func main() {
@@ -29,6 +30,7 @@ func main() {
 
 	api := r.Group("/api")
 	auth.Routes(api.Group("/auth"))
+	branches.Routes(api.Group("/branches"))
 
 	PORT := os.Getenv("APP_PORT")
 	if PORT == "" {

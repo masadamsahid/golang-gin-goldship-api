@@ -108,13 +108,14 @@ func HandleLogin(ctx *gin.Context) {
 		return
 	}
 
-	sqlGetUserByUsername := `SELECT id, username, email, "password" FROM users WHERE username = $1 OR email = $1`
+	sqlGetUserByUsername := `SELECT id, username, email, role, "password" FROM users WHERE username = $1 OR email = $1`
 
 	var user users.User
 	err = db.DB.QueryRow(sqlGetUserByUsername, body.UsernameEmail).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
+		&user.Role,
 		&user.Password,
 	)
 	if err != nil {
@@ -151,6 +152,8 @@ func HandleLogin(ctx *gin.Context) {
 	authToken, err := helpers.CreateAuthToken(helpers.AuthTokenClaims{
 		ID:       user.ID,
 		Username: user.Username,
+		Email:    user.Email,
+		Role:     user.Role,
 	})
 	if err != nil {
 		log.Println(err)
