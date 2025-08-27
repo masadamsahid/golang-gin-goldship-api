@@ -42,3 +42,13 @@ func StopDB() {
 	DB.Close()
 	log.Println("Success closing connection to DB")
 }
+
+func CloseTx(tx *sql.Tx, txErr error) {
+	if r := recover(); r != nil {
+		log.Println(r)
+		tx.Rollback()
+	} else if txErr != nil {
+		log.Println(txErr)
+		tx.Rollback() // Rollback if an error occurred before commit
+	}
+}
