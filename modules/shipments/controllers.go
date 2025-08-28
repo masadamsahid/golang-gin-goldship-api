@@ -560,7 +560,7 @@ func CancelShipmentByID(ctx *gin.Context) {
 		return
 	}
 
-	var initialHistory ShipmentHistory
+	var cancelHistory ShipmentHistory
 	sqlInitHistory := `
 	INSERT INTO shipment_histories (shipment_id, status, "desc")
 	VALUES ($1, $2, $3)
@@ -570,13 +570,13 @@ func CancelShipmentByID(ctx *gin.Context) {
 	desc := fmt.Sprintf("%s has cancelled the shipment. Shipment currently is %s", user.Username, StatusCancelled)
 
 	err = tx.QueryRow(sqlInitHistory, id, StatusCancelled, desc).Scan(
-		&initialHistory.ID,
-		&initialHistory.ShipmentID,
-		&initialHistory.Status,
-		&initialHistory.Desc,
-		&initialHistory.CourierID,
-		&initialHistory.BranchID,
-		&initialHistory.Timestamp,
+		&cancelHistory.ID,
+		&cancelHistory.ShipmentID,
+		&cancelHistory.Status,
+		&cancelHistory.Desc,
+		&cancelHistory.CourierID,
+		&cancelHistory.BranchID,
+		&cancelHistory.Timestamp,
 	)
 	if err != nil {
 		log.Println("Failed to insert cancellation history", err)
@@ -671,7 +671,7 @@ func PickupPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	var initialHistory ShipmentHistory
+	var pickupHistory ShipmentHistory
 	sqlInitHistory := `
 	INSERT INTO shipment_histories (shipment_id, status, "desc", courier_id)
 	VALUES ($1, $2, $3, $4)
@@ -681,13 +681,13 @@ func PickupPackageByShipmentID(ctx *gin.Context) {
 	desc := fmt.Sprintf("%s has picked up the package. Shipment currently is %s", user.Username, StatusPickedUp)
 
 	err = tx.QueryRow(sqlInitHistory, id, StatusPickedUp, desc, user.ID).Scan(
-		&initialHistory.ID,
-		&initialHistory.ShipmentID,
-		&initialHistory.Status,
-		&initialHistory.Desc,
-		&initialHistory.CourierID,
-		&initialHistory.BranchID,
-		&initialHistory.Timestamp,
+		&pickupHistory.ID,
+		&pickupHistory.ShipmentID,
+		&pickupHistory.Status,
+		&pickupHistory.Desc,
+		&pickupHistory.CourierID,
+		&pickupHistory.BranchID,
+		&pickupHistory.Timestamp,
 	)
 	if err != nil {
 		log.Println("Failed to insert picked up history", err)
@@ -809,7 +809,7 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	var initialHistory ShipmentHistory
+	var transitHistory ShipmentHistory
 	sqlInitHistory := `
 	INSERT INTO shipment_histories (shipment_id, status, "desc", courier_id, branch_id)
 	VALUES ($1, $2, $3, $4, $5)
@@ -822,13 +822,13 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 	)
 
 	err = tx.QueryRow(sqlInitHistory, id, StatusInTransit, desc, user.ID, body.BranchID).Scan(
-		&initialHistory.ID,
-		&initialHistory.ShipmentID,
-		&initialHistory.Status,
-		&initialHistory.Desc,
-		&initialHistory.CourierID,
-		&initialHistory.BranchID,
-		&initialHistory.Timestamp,
+		&transitHistory.ID,
+		&transitHistory.ShipmentID,
+		&transitHistory.Status,
+		&transitHistory.Desc,
+		&transitHistory.CourierID,
+		&transitHistory.BranchID,
+		&transitHistory.Timestamp,
 	)
 	if err != nil {
 		log.Println("Failed to insert in transit history", err)
@@ -854,5 +854,111 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 }
 
 func DeliverPackageByShipmentID(ctx *gin.Context) {
+	u, ok := ctx.Get("user")
+	if !ok {
+		log.Println("Failed get user from context")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	user, ok := u.(helpers.AuthPayload)
+	if !ok {
+		log.Println("Failed convert user from context to AuthPayload")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	strId := ctx.Param("id")
+	id, err := strconv.Atoi(strId)
+	if err != nil {
+		log.Println(strId)
+		log.Println(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid shipment ID",
+		})
+		return
+	}
+
+	tx, txErr := db.DB.BeginTx(ctx, nil)
+	if txErr != nil {
+		log.Fatalf("Error beginning transaction: %v", txErr)
+	}
+	defer db.CloseTx(tx, txErr)
+
+	var currentShipment Shipment
+	err = tx.QueryRow(`SELECT id, status FROM shipments WHERE id = $1 FOR UPDATE`, id).Scan(&currentShipment.ID, &currentShipment.Status)
+	if err != nil {
+		log.Println("Failed to get shipment for delivery", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	if currentShipment.Status == StatusDelivered {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Shipment is already delivered",
+		})
+		return
+	}
+
+	if currentShipment.Status != StatusInTransit {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Shipment can only be delivered if it's in transit status",
+		})
+		return
+	}
+
+	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, StatusDelivered, id)
+	if err != nil {
+		log.Println("Failed to update shipment status to delivered", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	var deliveredHistory ShipmentHistory
+	sqlInitHistory := `
+	INSERT INTO shipment_histories (shipment_id, status, "desc", courier_id)
+	VALUES ($1, $2, $3, $4)
+	RETURNING  id, shipment_id, status, "desc", courier_id, branch_id, timestamp
+	`
+
+	desc := fmt.Sprintf("%s has delivered the package. Shipment currently is %s", user.Username, StatusDelivered)
+
+	err = tx.QueryRow(sqlInitHistory, id, StatusDelivered, desc, user.ID).Scan(
+		&deliveredHistory.ID,
+		&deliveredHistory.ShipmentID,
+		&deliveredHistory.Status,
+		&deliveredHistory.Desc,
+		&deliveredHistory.CourierID,
+		&deliveredHistory.BranchID,
+		&deliveredHistory.Timestamp,
+	)
+	if err != nil {
+		log.Println("Failed to insert delivered history", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Shipment delivered successfully",
+	})
 
 }

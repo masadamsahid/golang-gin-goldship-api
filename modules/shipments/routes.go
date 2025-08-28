@@ -13,5 +13,5 @@ func Routes(rg *gin.RouterGroup) {
 	rg.POST("/:id/cancel", auth.JwtAuthMiddleware(), CancelShipmentByID)
 	rg.POST("/:id/pick-up", auth.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), PickupPackageByShipmentID)
 	rg.POST("/:id/transit", auth.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), TransitPackageByShipmentID)
-	rg.POST("/:id/delivered", auth.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), DeliverPackageByShipmentID)
+	rg.POST("/:id/deliver", auth.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), DeliverPackageByShipmentID)
 }
