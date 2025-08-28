@@ -30,3 +30,7 @@ type CreateShipmentDto struct {
 	ItemWeight       float64 `json:"item_weight" binding:"required"`
 	Distance         float64 `json:"distance" binding:"required"`
 }
+
+type TransitShipmentDto struct {
+	BranchID float64 `json:"branch_id" binding:"required"`
+}

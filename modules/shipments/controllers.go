@@ -14,6 +14,7 @@ import (
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
 	"github.com/masadamsahid/golang-gin-goldship-api/helpers"
 	xenditService "github.com/masadamsahid/golang-gin-goldship-api/helpers/xendit-service"
+	"github.com/masadamsahid/golang-gin-goldship-api/modules/branches"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/payments"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/users/roles"
 	"github.com/xendit/xendit-go/v7/invoice"
@@ -698,6 +699,145 @@ func PickupPackageByShipmentID(ctx *gin.Context) {
 }
 
 func TransitPackageByShipmentID(ctx *gin.Context) {
+	u, ok := ctx.Get("user")
+	if !ok {
+		log.Println("Failed get user from context")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	user, ok := u.(helpers.AuthPayload)
+	if !ok {
+		log.Println("Failed convert user from context to AuthPayload")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	strId := ctx.Param("id")
+	id, err := strconv.Atoi(strId)
+	if err != nil {
+		log.Println(strId)
+		log.Println(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid shipment ID",
+		})
+		return
+	}
+
+	var body TransitShipmentDto
+	err = ctx.ShouldBind(&body)
+	if err != nil {
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if !ok {
+			log.Println(err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Internal server error",
+			})
+			return
+		}
+
+		log.Printf("%+v\n", validationErrors)
+		errs := helpers.HandleValidationErrors(validationErrors)
+
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "errors": errs})
+		return
+	}
+
+	tx, txErr := db.DB.BeginTx(ctx, nil)
+	if txErr != nil {
+		log.Fatalf("Error beginning transaction: %v", txErr)
+	}
+	defer db.CloseTx(tx, txErr)
+
+	var currentShipment Shipment
+	err = tx.QueryRow(`SELECT id, status FROM shipments WHERE id = $1 FOR UPDATE`, id).Scan(&currentShipment.ID, &currentShipment.Status)
+	if err != nil {
+		log.Println("Failed to get shipment for transit", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	var transitBranch branches.Branch
+	err = tx.QueryRow(`SELECT id, name, address FROM branches WHERE id = $1 LIMIT 1`, body.BranchID).Scan(&transitBranch.ID, &transitBranch.Name, &transitBranch.Address)
+	if err != nil {
+		log.Println("Failed to get branch for transit", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	if currentShipment.Status == StatusInTransit ||
+		currentShipment.Status == StatusDelivered {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Shipment is already in transit or delivered",
+		})
+		return
+	}
+
+	if currentShipment.Status != StatusPickedUp {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Shipment can only be transited if it's in picked up status",
+		})
+		return
+	}
+
+	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, StatusInTransit, id)
+	if err != nil {
+		log.Println("Failed to update shipment status to in transit", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	var initialHistory ShipmentHistory
+	sqlInitHistory := `
+	INSERT INTO shipment_histories (shipment_id, status, "desc", courier_id, branch_id)
+	VALUES ($1, $2, $3, $4, $5)
+	RETURNING  id, shipment_id, status, "desc", courier_id, branch_id, timestamp
+	`
+
+	desc := fmt.Sprintf(
+		"%s has transited the package to branch %s [%d | %s]. Shipment currently is %s",
+		user.Username, transitBranch.Name, transitBranch.ID, transitBranch.Address, StatusInTransit,
+	)
+
+	err = tx.QueryRow(sqlInitHistory, id, StatusInTransit, desc, user.ID, body.BranchID).Scan(
+		&initialHistory.ID,
+		&initialHistory.ShipmentID,
+		&initialHistory.Status,
+		&initialHistory.Desc,
+		&initialHistory.CourierID,
+		&initialHistory.BranchID,
+		&initialHistory.Timestamp,
+	)
+	if err != nil {
+		log.Println("Failed to insert in transit history", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Shipment transited successfully",
+	})
 
 }
 
