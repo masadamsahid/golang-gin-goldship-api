@@ -87,3 +87,39 @@ CREATE TABLE IF NOT EXISTS payments (
   updated_at TIMESTAMP DEFAULT NULL,
   CONSTRAINT fk_payment_shipment FOREIGN KEY (shipment_id) REFERENCES shipments(id)
 );
+
+
+-- SEEDER
+INSERT INTO branches (name, phone, address)
+VALUES ('Jakarta', '0211234567', 'Jl. Sudirman No. 1'),
+('Surabaya', '0311234567', 'Jl. Thamrin No. 1'),
+('Bandung', '0221234567', 'Jl. Asia Afrika No. 1'),
+('Semarang', '0241234567', 'Jl. Pahlawan No. 1'),
+('Yogyakarta', '0274123456', 'Jl. Malioboro No. 1'),
+('Malang', '0341123456', 'Jl. Ijen No. 1'),
+('Solo', '0271123456', 'Jl. Slamet Riyadi No. 1'),
+('Cirebon', '0231123456', 'Jl. Kartini No. 1'),
+('Bogor', '0251123456', 'Jl. Pajajaran No. 1'),
+('Depok', '0217654321', 'Jl. Margonda Raya No. 1'),
+('Tangerang', '0212345678', 'Jl. Raya Serpong No. 1'),
+('Bekasi', '0218765432', 'Jl. Ahmad Yani No. 1'),
+('Kediri', '0354123456', 'Jl. Dhoho No. 1'),
+('Madiun', '0351123456', 'Jl. Pahlawan No. 1'),
+('Purwokerto', '0281123456', 'Jl. Jend. Sudirman No. 1'),
+('Pekalongan', '0285123456', 'Jl. Hayam Wuruk No. 1'),
+('Tegal', '0283123456', 'Jl. Gajah Mada No. 1'),
+('Salatiga', '0298123456', 'Jl. Diponegoro No. 1'),
+('Magelang', '0293123456', 'Jl. Pahlawan No. 1'),
+('Sukabumi', '0266123456', 'Jl. Ahmad Yani No. 1'),
+('Tasikmalaya', '0265123456', 'Jl. HZ. Mustofa No. 1'),
+('Jember', '0331123456', 'Jl. Kalimantan No. 1'),
+('Banyuwangi', '0333123456', 'Jl. Gatot Subroto No. 1'),
+('Lumajang', '0334123456', 'Jl. PB. Sudirman No. 1'),
+('Probolinggo', '0335123456', 'Jl. Soekarno Hatta No. 1'),
+('Pasuruan', '0343123456', 'Jl. Pahlawan No. 1'),
+('Mojokerto', '0321123456', 'Jl. Majapahit No. 1'),
+('Gresik', '0313951234', 'Jl. Dr. Wahidin Sudirohusodo No. 1'),
+('Denpasar', '0361123456', 'Jl. Teuku Umar No. 1'),
+('Singaraja', '0362123456', 'Jl. Ahmad Yani No. 1'),
+('Ubud', '0361975678', 'Jl. Raya Ubud No. 1');
+
