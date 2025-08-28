@@ -2,16 +2,16 @@ package shipments
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/auth"
+	"github.com/masadamsahid/golang-gin-goldship-api/helpers/middlewares"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/users/roles"
 )
 
 func Routes(rg *gin.RouterGroup) {
-	rg.POST("/", auth.JwtAuthMiddleware(), CreateNewShipment)
-	rg.GET("/", auth.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin), GetShipmentsList)
-	rg.GET("/:id", auth.JwtAuthMiddleware(), GetShipmentByID)
-	rg.POST("/:id/cancel", auth.JwtAuthMiddleware(), CancelShipmentByID)
-	rg.POST("/:id/pick-up", auth.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), PickupPackageByShipmentID)
-	rg.POST("/:id/transit", auth.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), TransitPackageByShipmentID)
-	rg.POST("/:id/deliver", auth.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), DeliverPackageByShipmentID)
+	rg.POST("/", middlewares.JwtAuthMiddleware(), CreateNewShipment)
+	rg.GET("/", middlewares.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin), GetShipmentsList)
+	rg.GET("/:id", middlewares.JwtAuthMiddleware(), GetShipmentByID)
+	rg.POST("/:id/cancel", middlewares.JwtAuthMiddleware(), CancelShipmentByID)
+	rg.POST("/:id/pick-up", middlewares.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), PickupPackageByShipmentID)
+	rg.POST("/:id/transit", middlewares.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), TransitPackageByShipmentID)
+	rg.POST("/:id/deliver", middlewares.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), DeliverPackageByShipmentID)
 }
