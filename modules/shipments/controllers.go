@@ -773,17 +773,16 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	if currentShipment.Status == StatusInTransit ||
-		currentShipment.Status == StatusDelivered {
+	if currentShipment.Status == StatusDelivered {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Shipment is already in transit or delivered",
+			"message": "Shipment is already in delivered",
 		})
 		return
 	}
 
-	if currentShipment.Status != StatusPickedUp {
+	if currentShipment.Status != StatusReadyToPickup && currentShipment.Status != StatusPickedUp && currentShipment.Status != StatusInTransit {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Shipment can only be transited if it's in picked up status",
+			"message": "Shipment can only be transited if it's in picked up or in transit status",
 		})
 		return
 	}
