@@ -1,10 +1,12 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -60,4 +62,18 @@ func VerifyAuthToken(strAuthToken string) (*jwt.Token, error) {
 	// log.Println(err)
 
 	return authToken, err
+}
+
+func ParseJWTUserFromCtx(ctx *gin.Context, userContainer *AuthPayload) error {
+	u, ok := ctx.Get("user")
+	if !ok {
+		return errors.New("failed to get user from context")
+	}
+
+	*userContainer, ok = u.(AuthPayload)
+	if !ok {
+		return errors.New("failed convert user from context to AuthPayload")
+	}
+
+	return nil
 }

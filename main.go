@@ -14,6 +14,7 @@ import (
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/auth"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/branches"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/shipments"
+	"github.com/masadamsahid/golang-gin-goldship-api/modules/users"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/webhooks"
 )
 
@@ -42,6 +43,7 @@ func main() {
 	auth.Routes(api.Group("/auth"))
 	branches.Routes(api.Group("/branches"))
 	shipments.Routes(api.Group("/shipments"))
+	users.Routes(api.Group("/users"))
 	webhooks.Routes(api.Group("/webhooks"))
 
 	PORT := os.Getenv("APP_PORT")
