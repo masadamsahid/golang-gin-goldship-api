@@ -33,14 +33,15 @@ const (
 )
 
 type Payment struct {
-	ID          int           `json:"id"`
-	ShipmentID  int           `json:"shipment_id"`
-	Amount      int           `json:"amount"`
-	PaymentDate *time.Time    `json:"payment_date"`
-	InvoiceID   string        `json:"invoice_id"`
-	ExternalID  string        `json:"external_id"`
-	InvoiceURL  string        `json:"invoice_url"`
-	Status      PaymentStatus `json:"status"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdatedAt   *time.Time    `json:"updated_at"`
+	ID         int           `json:"id"`
+	ShipmentID int           `json:"shipment_id"`
+	Amount     int           `json:"amount"`
+	PaidAt     *time.Time    `json:"paid_at"`
+	ExpiredAt  *time.Time    `json:"expired_at"`
+	InvoiceID  string        `json:"invoice_id"`
+	ExternalID string        `json:"external_id"`
+	InvoiceURL string        `json:"invoice_url"`
+	Status     PaymentStatus `json:"status"`
+	CreatedAt  time.Time     `json:"created_at"`
+	UpdatedAt  *time.Time    `json:"updated_at"`
 }

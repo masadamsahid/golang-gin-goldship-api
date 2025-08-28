@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xendit/xendit-go/v7/invoice"
 
 	"github.com/joho/godotenv"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
@@ -13,10 +14,19 @@ import (
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/auth"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/branches"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/shipments"
+	"github.com/masadamsahid/golang-gin-goldship-api/modules/webhooks"
 )
 
 func main() {
 	xenditService.InitXendit()
+
+	log.Println(
+		string(invoice.INVOICESTATUS_PENDING),
+		invoice.INVOICESTATUS_PAID,
+		invoice.INVOICESTATUS_SETTLED,
+		invoice.INVOICESTATUS_EXPIRED,
+		invoice.INVOICESTATUS_XENDIT_ENUM_DEFAULT_FALLBACK,
+	)
 
 	defer db.StopDB()
 	db.ConnectDB()
@@ -32,6 +42,7 @@ func main() {
 	auth.Routes(api.Group("/auth"))
 	branches.Routes(api.Group("/branches"))
 	shipments.Routes(api.Group("/shipments"))
+	webhooks.Routes(api.Group("/webhooks"))
 
 	PORT := os.Getenv("APP_PORT")
 	if PORT == "" {

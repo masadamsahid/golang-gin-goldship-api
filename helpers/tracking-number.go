@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -20,5 +21,5 @@ func randomString(length int) string {
 func GenerateTrackingNumber() string {
 	currDate := time.Now()
 
-	return "GS-" + currDate.Format("20060102150405") + randomString(8)
+	return "GS-" + currDate.Format("20060102150405") + strings.ToUpper(randomString(8))
 }
