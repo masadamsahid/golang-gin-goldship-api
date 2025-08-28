@@ -322,6 +322,19 @@ func GetShipmentsList(ctx *gin.Context) {
 		return
 	}
 
+	if len(shipments) < 1 {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "No shipments found",
+			"data":    []Shipment{},
+			"meta": gin.H{
+				"total":     totalShipments,
+				"page":      page,
+				"page_size": pageSize,
+			},
+		})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Shipments retrieved successfully",
 		"data":    shipments,
