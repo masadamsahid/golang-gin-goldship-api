@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
 	"github.com/masadamsahid/golang-gin-goldship-api/helpers"
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/users"
+	"github.com/masadamsahid/golang-gin-goldship-api/helpers/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -44,7 +44,7 @@ func HandleRegister(ctx *gin.Context) {
 
 	sqlCreateNewUser := `INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email, role, created_at, updated_at`
 
-	var newUser users.User
+	var newUser models.User
 	err = db.DB.QueryRow(sqlCreateNewUser, body.Username, body.Email, hashedPwd).Scan(
 		&newUser.ID,
 		&newUser.Username,
@@ -110,7 +110,7 @@ func HandleLogin(ctx *gin.Context) {
 
 	sqlGetUserByUsername := `SELECT id, username, email, role, "password" FROM users WHERE username = $1 OR email = $1`
 
-	var user users.User
+	var user models.User
 	err = db.DB.QueryRow(sqlGetUserByUsername, body.UsernameEmail).Scan(
 		&user.ID,
 		&user.Username,

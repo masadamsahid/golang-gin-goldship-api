@@ -1,10 +1,4 @@
-package shipments
-
-import (
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/branches"
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/payments"
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/users"
-)
+package models
 
 const (
 	StatusPendingPayment = "PENDING_PAYMENT"
@@ -32,8 +26,8 @@ type Shipment struct {
 	CreatedAt        string  `json:"created_at"`
 	UpdatedAt        *string `json:"updated_at"` // Use pointer for nullable timestamp
 
-	Sender    *users.User       `json:"sender,omitempty"`
-	Payment   *payments.Payment `json:"payment"`
+	Sender    *User             `json:"sender,omitempty"`
+	Payment   *Payment          `json:"payment"`
 	Histories []ShipmentHistory `json:"histories"`
 }
 
@@ -46,7 +40,7 @@ type ShipmentHistory struct {
 	BranchID   *int   `json:"branch_id"`  // Use pointer for nullable foreign key
 	Timestamp  string `json:"timestamp"`
 
-	Shipment *Shipment        `json:"shipment,omitempty"`
-	Courier  *users.User      `json:"courier,omitempty"`
-	Branch   *branches.Branch `json:"branch,omitempty"`
+	Shipment *Shipment `json:"shipment,omitempty"`
+	Courier  *User     `json:"courier,omitempty"`
+	Branch   *Branch   `json:"branch,omitempty"`
 }

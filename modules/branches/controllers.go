@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
 	"github.com/masadamsahid/golang-gin-goldship-api/helpers"
+	"github.com/masadamsahid/golang-gin-goldship-api/helpers/models"
 )
 
 func HandleCreateBranch(ctx *gin.Context) {
@@ -31,7 +32,7 @@ func HandleCreateBranch(ctx *gin.Context) {
 	}
 
 	sqlCreateBranch := `INSERT INTO branches (name, phone, address) VALUES ($1, $2, $3) RETURNING id, name, phone, address, created_at, updated_at`
-	var newBranch Branch
+	var newBranch models.Branch
 	err = db.DB.QueryRow(sqlCreateBranch, body.Name, body.Phone, body.Address).Scan(
 		&newBranch.ID,
 		&newBranch.Name,
@@ -77,10 +78,10 @@ func HandleGetBranchesList(ctx *gin.Context) {
 		return
 	}
 
-	var branches []Branch
+	var branches []models.Branch
 	defer rows.Close()
 	for rows.Next() {
-		var b Branch
+		var b models.Branch
 		err := rows.Scan(
 			&b.ID,
 			&b.Name,
@@ -109,7 +110,7 @@ func HandleGetBranchByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	sqlGetBranch := `SELECT id, name, phone, address, created_at, updated_at FROM branches WHERE id = $1`
-	var branch Branch
+	var branch models.Branch
 	err := db.DB.QueryRow(sqlGetBranch, id).Scan(
 		&branch.ID,
 		&branch.Name,
@@ -155,7 +156,7 @@ func HandleUpdateBranch(ctx *gin.Context) {
 	}
 
 	sqlUpdateBranch := `UPDATE branches SET name = $2, phone = $3, address = $4, updated_at = NOW() WHERE id = $1 RETURNING id, name, phone, address, created_at, updated_at`
-	var updatedBranch Branch
+	var updatedBranch models.Branch
 	err = db.DB.QueryRow(sqlUpdateBranch, id, body.Name, body.Phone, body.Address).Scan(
 		&updatedBranch.ID,
 		&updatedBranch.Name,

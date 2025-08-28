@@ -13,9 +13,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
 	"github.com/masadamsahid/golang-gin-goldship-api/helpers"
+	"github.com/masadamsahid/golang-gin-goldship-api/helpers/models"
 	xenditService "github.com/masadamsahid/golang-gin-goldship-api/helpers/xendit-service"
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/branches"
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/payments"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/users/roles"
 	"github.com/xendit/xendit-go/v7/invoice"
 )
@@ -100,7 +99,7 @@ func CreateNewShipment(ctx *gin.Context) {
 	}
 	defer db.CloseTx(tx, txErr)
 
-	var newShipment Shipment
+	var newShipment models.Shipment
 	err = tx.QueryRow(
 		sqlCreateShipment,
 		trackingNumber,
@@ -114,7 +113,7 @@ func CreateNewShipment(ctx *gin.Context) {
 		body.ItemName,
 		body.ItemWeight,
 		body.Distance,
-		StatusPendingPayment,
+		models.StatusPendingPayment,
 	).Scan(
 		&newShipment.ID,
 		&newShipment.TrackingNumber,
@@ -165,7 +164,7 @@ func CreateNewShipment(ctx *gin.Context) {
 		return
 	}
 
-	var payment payments.Payment
+	var payment models.Payment
 	sqlCreatePayment := `
 	INSERT INTO payments (
 		shipment_id,
@@ -197,7 +196,7 @@ func CreateNewShipment(ctx *gin.Context) {
 		return
 	}
 
-	var initialHistory ShipmentHistory
+	var initialHistory models.ShipmentHistory
 	sqlInitHistory := `
 	INSERT INTO shipment_histories (shipment_id, status, "desc")
 	VALUES ($1, $2, $3)
@@ -250,7 +249,7 @@ func GetShipmentsList(ctx *gin.Context) {
 		return
 	}
 
-	var shipments []Shipment
+	var shipments []models.Shipment
 
 	sqlGetShipments := `
 		SELECT
@@ -284,7 +283,7 @@ func GetShipmentsList(ctx *gin.Context) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var shipment Shipment
+		var shipment models.Shipment
 		err := rows.Scan(
 			&shipment.ID,
 			&shipment.TrackingNumber,
@@ -325,7 +324,7 @@ func GetShipmentsList(ctx *gin.Context) {
 	if len(shipments) < 1 {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"message": "No shipments found",
-			"data":    []Shipment{},
+			"data":    []models.Shipment{},
 			"meta": gin.H{
 				"total":     totalShipments,
 				"page":      page,
@@ -358,8 +357,8 @@ func GetShipmentByID(ctx *gin.Context) {
 		return
 	}
 
-	var s Shipment
-	var p payments.Payment
+	var s models.Shipment
+	var p models.Payment
 	sqlGetShipment := `
 		SELECT
 			s.id,
@@ -429,7 +428,7 @@ func GetShipmentByID(ctx *gin.Context) {
 		return
 	}
 
-	var histories []ShipmentHistory
+	var histories []models.ShipmentHistory
 	sqlGetHistories := `
 		SELECT
 			id,
@@ -455,7 +454,7 @@ func GetShipmentByID(ctx *gin.Context) {
 
 	defer rows.Close()
 	for rows.Next() {
-		var history ShipmentHistory
+		var history models.ShipmentHistory
 		err := rows.Scan(
 			&history.ID,
 			&history.ShipmentID,
@@ -520,7 +519,7 @@ func CancelShipmentByID(ctx *gin.Context) {
 	}
 	defer db.CloseTx(tx, txErr)
 
-	var currentShipment Shipment
+	var currentShipment models.Shipment
 	err = tx.QueryRow(`SELECT id, sender_id, status FROM shipments WHERE id = $1 FOR UPDATE`, id).Scan(&currentShipment.ID, &currentShipment.SenderID, &currentShipment.Status)
 	if err != nil {
 		log.Println("Failed to get shipment for cancellation", err)
@@ -537,21 +536,21 @@ func CancelShipmentByID(ctx *gin.Context) {
 		return
 	}
 
-	if currentShipment.Status == StatusCancelled {
+	if currentShipment.Status == models.StatusCancelled {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shipment is already cancelled",
 		})
 		return
 	}
 
-	if currentShipment.Status != StatusPendingPayment {
+	if currentShipment.Status != models.StatusPendingPayment {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shipment can only be cancelled if it's in pending payment status",
 		})
 		return
 	}
 
-	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, StatusCancelled, id)
+	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, models.StatusCancelled, id)
 	if err != nil {
 		log.Println("Failed to update shipment status to cancelled", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -560,16 +559,16 @@ func CancelShipmentByID(ctx *gin.Context) {
 		return
 	}
 
-	var cancelHistory ShipmentHistory
+	var cancelHistory models.ShipmentHistory
 	sqlInitHistory := `
 	INSERT INTO shipment_histories (shipment_id, status, "desc")
 	VALUES ($1, $2, $3)
 	RETURNING  id, shipment_id, status, "desc", courier_id, branch_id, timestamp
 	`
 
-	desc := fmt.Sprintf("%s has cancelled the shipment. Shipment currently is %s", user.Username, StatusCancelled)
+	desc := fmt.Sprintf("%s has cancelled the shipment. Shipment currently is %s", user.Username, models.StatusCancelled)
 
-	err = tx.QueryRow(sqlInitHistory, id, StatusCancelled, desc).Scan(
+	err = tx.QueryRow(sqlInitHistory, id, models.StatusCancelled, desc).Scan(
 		&cancelHistory.ID,
 		&cancelHistory.ShipmentID,
 		&cancelHistory.Status,
@@ -636,7 +635,7 @@ func PickupPackageByShipmentID(ctx *gin.Context) {
 	}
 	defer db.CloseTx(tx, txErr)
 
-	var currentShipment Shipment
+	var currentShipment models.Shipment
 	err = tx.QueryRow(`SELECT id, status FROM shipments WHERE id = $1 FOR UPDATE`, id).Scan(&currentShipment.ID, &currentShipment.Status)
 	if err != nil {
 		log.Println("Failed to get shipment for pickup", err)
@@ -646,23 +645,23 @@ func PickupPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	if currentShipment.Status == StatusPickedUp ||
-		currentShipment.Status == StatusInTransit ||
-		currentShipment.Status == StatusDelivered {
+	if currentShipment.Status == models.StatusPickedUp ||
+		currentShipment.Status == models.StatusInTransit ||
+		currentShipment.Status == models.StatusDelivered {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shipment is already picked up",
 		})
 		return
 	}
 
-	if currentShipment.Status != StatusReadyToPickup {
+	if currentShipment.Status != models.StatusReadyToPickup {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shipment can only be picked up if it's in paid status",
 		})
 		return
 	}
 
-	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, StatusPickedUp, id)
+	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, models.StatusPickedUp, id)
 	if err != nil {
 		log.Println("Failed to update shipment status to picked up", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -671,16 +670,16 @@ func PickupPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	var pickupHistory ShipmentHistory
+	var pickupHistory models.ShipmentHistory
 	sqlInitHistory := `
 	INSERT INTO shipment_histories (shipment_id, status, "desc", courier_id)
 	VALUES ($1, $2, $3, $4)
 	RETURNING  id, shipment_id, status, "desc", courier_id, branch_id, timestamp
 	`
 
-	desc := fmt.Sprintf("%s has picked up the package. Shipment currently is %s", user.Username, StatusPickedUp)
+	desc := fmt.Sprintf("%s has picked up the package. Shipment currently is %s", user.Username, models.StatusPickedUp)
 
-	err = tx.QueryRow(sqlInitHistory, id, StatusPickedUp, desc, user.ID).Scan(
+	err = tx.QueryRow(sqlInitHistory, id, models.StatusPickedUp, desc, user.ID).Scan(
 		&pickupHistory.ID,
 		&pickupHistory.ShipmentID,
 		&pickupHistory.Status,
@@ -766,7 +765,7 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 	}
 	defer db.CloseTx(tx, txErr)
 
-	var currentShipment Shipment
+	var currentShipment models.Shipment
 	err = tx.QueryRow(`SELECT id, status FROM shipments WHERE id = $1 FOR UPDATE`, id).Scan(&currentShipment.ID, &currentShipment.Status)
 	if err != nil {
 		log.Println("Failed to get shipment for transit", err)
@@ -776,7 +775,7 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	var transitBranch branches.Branch
+	var transitBranch models.Branch
 	err = tx.QueryRow(`SELECT id, name, address FROM branches WHERE id = $1 LIMIT 1`, body.BranchID).Scan(&transitBranch.ID, &transitBranch.Name, &transitBranch.Address)
 	if err != nil {
 		log.Println("Failed to get branch for transit", err)
@@ -786,21 +785,21 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	if currentShipment.Status == StatusDelivered {
+	if currentShipment.Status == models.StatusDelivered {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shipment is already in delivered",
 		})
 		return
 	}
 
-	if currentShipment.Status != StatusReadyToPickup && currentShipment.Status != StatusPickedUp && currentShipment.Status != StatusInTransit {
+	if currentShipment.Status != models.StatusReadyToPickup && currentShipment.Status != models.StatusPickedUp && currentShipment.Status != models.StatusInTransit {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shipment can only be transited if it's in picked up or in transit status",
 		})
 		return
 	}
 
-	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, StatusInTransit, id)
+	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, models.StatusInTransit, id)
 	if err != nil {
 		log.Println("Failed to update shipment status to in transit", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -809,7 +808,7 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	var transitHistory ShipmentHistory
+	var transitHistory models.ShipmentHistory
 	sqlInitHistory := `
 	INSERT INTO shipment_histories (shipment_id, status, "desc", courier_id, branch_id)
 	VALUES ($1, $2, $3, $4, $5)
@@ -818,10 +817,10 @@ func TransitPackageByShipmentID(ctx *gin.Context) {
 
 	desc := fmt.Sprintf(
 		"%s has transited the package to branch %s [%d | %s]. Shipment currently is %s",
-		user.Username, transitBranch.Name, transitBranch.ID, transitBranch.Address, StatusInTransit,
+		user.Username, transitBranch.Name, transitBranch.ID, transitBranch.Address, models.StatusInTransit,
 	)
 
-	err = tx.QueryRow(sqlInitHistory, id, StatusInTransit, desc, user.ID, body.BranchID).Scan(
+	err = tx.QueryRow(sqlInitHistory, id, models.StatusInTransit, desc, user.ID, body.BranchID).Scan(
 		&transitHistory.ID,
 		&transitHistory.ShipmentID,
 		&transitHistory.Status,
@@ -889,7 +888,7 @@ func DeliverPackageByShipmentID(ctx *gin.Context) {
 	}
 	defer db.CloseTx(tx, txErr)
 
-	var currentShipment Shipment
+	var currentShipment models.Shipment
 	err = tx.QueryRow(`SELECT id, status FROM shipments WHERE id = $1 FOR UPDATE`, id).Scan(&currentShipment.ID, &currentShipment.Status)
 	if err != nil {
 		log.Println("Failed to get shipment for delivery", err)
@@ -899,21 +898,21 @@ func DeliverPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	if currentShipment.Status == StatusDelivered {
+	if currentShipment.Status == models.StatusDelivered {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shipment is already delivered",
 		})
 		return
 	}
 
-	if currentShipment.Status != StatusInTransit {
+	if currentShipment.Status != models.StatusInTransit {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shipment can only be delivered if it's in transit status",
 		})
 		return
 	}
 
-	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, StatusDelivered, id)
+	_, err = tx.Exec(`UPDATE shipments SET status = $1 WHERE id = $2`, models.StatusDelivered, id)
 	if err != nil {
 		log.Println("Failed to update shipment status to delivered", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -922,16 +921,16 @@ func DeliverPackageByShipmentID(ctx *gin.Context) {
 		return
 	}
 
-	var deliveredHistory ShipmentHistory
+	var deliveredHistory models.ShipmentHistory
 	sqlInitHistory := `
 	INSERT INTO shipment_histories (shipment_id, status, "desc", courier_id)
 	VALUES ($1, $2, $3, $4)
 	RETURNING  id, shipment_id, status, "desc", courier_id, branch_id, timestamp
 	`
 
-	desc := fmt.Sprintf("%s has delivered the package. Shipment currently is %s", user.Username, StatusDelivered)
+	desc := fmt.Sprintf("%s has delivered the package. Shipment currently is %s", user.Username, models.StatusDelivered)
 
-	err = tx.QueryRow(sqlInitHistory, id, StatusDelivered, desc, user.ID).Scan(
+	err = tx.QueryRow(sqlInitHistory, id, models.StatusDelivered, desc, user.ID).Scan(
 		&deliveredHistory.ID,
 		&deliveredHistory.ShipmentID,
 		&deliveredHistory.Status,

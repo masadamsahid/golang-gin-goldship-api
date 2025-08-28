@@ -6,9 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
+	"github.com/masadamsahid/golang-gin-goldship-api/helpers/models"
 	xenditService "github.com/masadamsahid/golang-gin-goldship-api/helpers/xendit-service"
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/payments"
-	"github.com/masadamsahid/golang-gin-goldship-api/modules/shipments"
 	"github.com/xendit/xendit-go/v7/invoice"
 )
 
@@ -27,7 +26,7 @@ func XenditInvoiceNotification(ctx *gin.Context) {
 		return
 	}
 
-	var payment payments.Payment
+	var payment models.Payment
 	sqlStatement := `SELECT id, shipment_id, status FROM payments WHERE invoice_id = $1 LIMIT 1`
 	err := db.DB.QueryRow(sqlStatement, body.ID).Scan(&payment.ID, &payment.ShipmentID, &payment.Status)
 	if err != nil {
@@ -48,7 +47,7 @@ func XenditInvoiceNotification(ctx *gin.Context) {
 	}
 	defer db.CloseTx(tx, txErr)
 
-	var updatedPayment payments.Payment
+	var updatedPayment models.Payment
 	switch body.Status {
 	case string(invoice.INVOICESTATUS_PAID):
 		fallthrough
@@ -75,7 +74,7 @@ func XenditInvoiceNotification(ctx *gin.Context) {
 		RETURNING id
 		`
 
-		_, txErr = tx.Exec(sqlInsertHistory, updatedPayment.ShipmentID, shipments.StatusReadyToPickup, desc)
+		_, txErr = tx.Exec(sqlInsertHistory, updatedPayment.ShipmentID, models.StatusReadyToPickup, desc)
 		if txErr != nil {
 			log.Printf("Error inserting shipment history: %v\n", txErr)
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -85,7 +84,7 @@ func XenditInvoiceNotification(ctx *gin.Context) {
 		}
 
 		sqlUpdateShipmentStatus := `UPDATE shipments SET status = $2 WHERE id = $1`
-		_, txErr = tx.Exec(sqlUpdateShipmentStatus, updatedPayment.ShipmentID, shipments.StatusReadyToPickup)
+		_, txErr = tx.Exec(sqlUpdateShipmentStatus, updatedPayment.ShipmentID, models.StatusReadyToPickup)
 		if txErr != nil {
 			log.Printf("Error updating shipment status: %v\n", txErr)
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -117,7 +116,7 @@ func XenditInvoiceNotification(ctx *gin.Context) {
 		RETURNING id
 		`
 
-		_, txErr = tx.Exec(sqlInsertHistory, updatedPayment.ShipmentID, shipments.StatusCancelled, desc)
+		_, txErr = tx.Exec(sqlInsertHistory, updatedPayment.ShipmentID, models.StatusCancelled, desc)
 		if txErr != nil {
 			log.Printf("Error inserting shipment history: %v\n", txErr)
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -127,7 +126,7 @@ func XenditInvoiceNotification(ctx *gin.Context) {
 		}
 
 		sqlUpdateShipmentStatus := `UPDATE shipments SET status = $2 WHERE id = $1`
-		_, txErr = tx.Exec(sqlUpdateShipmentStatus, updatedPayment.ShipmentID, shipments.StatusCancelled)
+		_, txErr = tx.Exec(sqlUpdateShipmentStatus, updatedPayment.ShipmentID, models.StatusCancelled)
 		if txErr != nil {
 			log.Printf("Error updating shipment status: %v\n", txErr)
 			ctx.JSON(http.StatusInternalServerError, gin.H{

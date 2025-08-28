@@ -1,4 +1,4 @@
-package branches
+package models
 
 import common "github.com/masadamsahid/golang-gin-goldship-api/helpers/commons"
 
