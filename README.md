@@ -6,6 +6,16 @@
 
 This repository contains the backend API for the Goldship Logistic service.
 
+
+## 📦 About Goldship Logistic API
+
+<img width="580" height="360" alt="goldship-6d1d95f616e34c9abe072d8f54478cba" src="https://github.com/user-attachments/assets/3adde587-210b-442f-a9e0-0b34717e2257" />
+
+
+
+Goldship Logistic is a logistic service that provides efficient and reliable delivery solutions for businesses and individuals. In this project, we aim to provide a robust and scalable API that supports all core functionalities of a modern logistic operation. This includes managing shipments, tracking deliveries, handling payments, and providing real-time updates to users.
+
+
 ## 🛠️ Tech Stack
 
 *   **Language**: [Go](https://go.dev/)
