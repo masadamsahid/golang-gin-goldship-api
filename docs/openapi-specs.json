@@ -11,9 +11,10 @@
       "variables": {
         "host": {
           "enum": [
+            "https://golang-gin-goldship-api-masadamsahid.apn.leapcell.app",
             "http://localhost:8080"
           ],
-          "default": "http://localhost:8080"
+          "default": "https://golang-gin-goldship-api-masadamsahid.apn.leapcell.app"
         }
       }
     }
