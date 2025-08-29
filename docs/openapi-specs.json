@@ -1,0 +1,1404 @@
+{
+  "openapi": "3.0.8",
+  "info": {
+    "title": "🚚 Goldship Logistic API (Golang + Gin)",
+    "version": "1.0.0",
+    "description": "📃 API documentation for the Goldship Logistic service. Built with :\n\n - [Golang](https://go.dev/)\n\n - [Gin](https://gin-gonic.com/)\n\n - [Google Maps API](https://developers.google.com/maps)\n\n - [Xendit Payment Gateway](https://www.xendit.co/)\n\n - [PostgreSQL](https://www.postgresql.org/)\n\n --- \n\n 🧙‍♂️✨ Wizardly created by [masadamsahid](https://github.com/masadamsahid)"
+  },
+  "servers": [
+    {
+      "url": "{host}/",
+      "variables": {
+        "host": {
+          "enum": [
+            "http://localhost:8080"
+          ],
+          "default": "http://localhost:8080"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health Check",
+      "description": "APIs for checking the health of the service"
+    },
+    {
+      "name": "Auth",
+      "description": "Authentication APIs"
+    },
+    {
+      "name": "Users",
+      "description": "User related APIs"
+    },
+    {
+      "name": "Branches",
+      "description": "Branches management APIs"
+    },
+    {
+      "name": "Shipments",
+      "description": "Shipments management APIs"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Webhook handler APIs"
+    }
+  ],
+  "paths": {
+    "/health-check": {
+      "get": {
+        "tags": [
+          "Health Check"
+        ],
+        "description": "Retrieve the health status of the service",
+        "responses": {
+          "200": {
+            "description": "Succesful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Hello, world! Server is ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register as new user",
+        "description": "This api will create a user with default CUSTOMER role",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/User"
+                  }
+                ],
+                "properties": {
+                  "confirm_password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponse"
+                    }
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "example": "Success register"
+                    },
+                    "data": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...(authToken)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login as a user",
+        "description": "This api will return an auth token for the user",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user1@mail.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponse"
+                    }
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "example": "Success login"
+                    },
+                    "data": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...(authToken)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/my-shipments": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get all shipments for the authenticated user",
+        "description": "This API will return all shipments associated with the authenticated user.",
+        "tags": [
+          "Users",
+          "Shipments"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page for pagination",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of shipments for the authenticated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Shipments retrieved successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Shipment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{username}/change-role": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Change user role",
+        "description": "Change the role of a user. Requires SUPERADMIN or ADMIN role.",
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Username of the user to change role"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/UserRoleEnum"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User role updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User role updated successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create a new branch",
+        "description": "Create a new branch. Requires ADMIN or SUPERADMIN role.",
+        "tags": [
+          "Branches"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Branch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Branch created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Branch created successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Branch"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all branches",
+        "description": "Retrieve a list of all branches.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page for pagination",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "tags": [
+          "Branches"
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of branches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Branches retrieved successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Branch"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/{id}": {
+      "get": {
+        "summary": "Get a branch by ID",
+        "description": "Retrieve a single branch by its ID.",
+        "tags": [
+          "Branches"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Branch ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Branch retrieved successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Branch"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update a branch",
+        "description": "Update a branch's details. Requires ADMIN or SUPERADMIN role.",
+        "tags": [
+          "Branches"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Branch ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Branch"
+                  }
+                ],
+                "properties": {
+                  "name": {
+                    "example": "Branch 1 (Updated)"
+                  },
+                  "phone": {
+                    "example": "+62-81234567890 (Updated)"
+                  },
+                  "address": {
+                    "example": "Jl. Jenderal Sudirman No. 5, Jakarta (Updated)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Branch updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Branch updated successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/Branch"
+                        }
+                      ],
+                      "properties": {
+                        "name": {
+                          "example": "Branch 1 (Updated)"
+                        },
+                        "phone": {
+                          "example": "+62-81234567890 (Updated)"
+                        },
+                        "address": {
+                          "example": "Jl. Jenderal Sudirman No. 5, Jakarta (Updated)"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Delete a branch",
+        "description": "Delete a branch by its ID. Requires ADMIN or SUPERADMIN role.",
+        "tags": [
+          "Branches"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Branch ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Branch deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create a new shipment",
+        "description": "Creates a new shipment and returns the details along with a payment invoice URL.",
+        "tags": [
+          "Shipments"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sender_name": {
+                    "type": "string",
+                    "example": "Raden Raiden"
+                  },
+                  "sender_phone": {
+                    "type": "string",
+                    "example": "+6281234567890"
+                  },
+                  "sender_address": {
+                    "type": "string",
+                    "example": "Jl. Kaliurang KM 4, Depok, Sleman, DI Yogyakarta, Indonesia. 52811"
+                  },
+                  "recipient_name": {
+                    "type": "string",
+                    "example": "Kuda Laper"
+                  },
+                  "recipient_address": {
+                    "type": "string",
+                    "example": "Jl. Mangga Dua No. 2, Jakarta, Indonesia. 11110"
+                  },
+                  "recipient_phone": {
+                    "type": "string",
+                    "example": "+6289876543210"
+                  },
+                  "item_name": {
+                    "type": "string",
+                    "example": "Laptop"
+                  },
+                  "item_weight": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 2.5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Shipment created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Shipment created successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Shipment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get all shipments",
+        "description": "Retrieve a list of all shipments. Requires ADMIN, SUPERADMIN, or COURIER role.",
+        "tags": [
+          "Shipments"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of items per page for pagination",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of shipments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Shipments retrieved successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Shipment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments/{id}/cancel": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Cancel a shipment",
+        "description": "Cancels a shipment. Only sender of the shipment can access this.",
+        "tags": [
+          "Shipments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Shipment ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipment cancelled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Shipment cancelled successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments/{id}/pick-up": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Mark a shipment as picked up",
+        "description": "Updates the shipment status to PICKED_UP. Requires SUPERADMIN, ADMIN, or COURIER role.",
+        "tags": [
+          "Shipments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Shipment ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipment status updated to PICKED_UP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Package picked up"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments/{id}/transit": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Mark a shipment as in transit",
+        "description": "Updates the shipment status to IN_TRANSIT. Requires SUPERADMIN, ADMIN, or  COURIER role.",
+        "tags": [
+          "Shipments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Shipment ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipment status updated to IN_TRANSIT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Package is in transit"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments/{id}/deliver": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Mark a shipment as delivered",
+        "description": "Updates the shipment status to DELIVERED. Requires SUPERADMIN, ADMIN, or COURIER role.",
+        "tags": [
+          "Shipments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Shipment ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipment status updated to DELIVERED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Package delivered successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipments/track/{tracking_number}": {
+      "get": {
+        "summary": "Get shipment history by tracking number",
+        "description": "Retrieve the full history of a shipment using its tracking number. This is a public endpoint.",
+        "tags": [
+          "Shipments"
+        ],
+        "parameters": [
+          {
+            "name": "tracking_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Shipment Tracking Number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipment history retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Shipment history retrieved successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Shipment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks/xendit": {
+      "post": {
+        "summary": "Xendit payment webhook",
+        "description": "Handles incoming payment status updates from Xendit.",
+        "tags": [
+          "Webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "X-CALLBACK-TOKEN",
+            "in": "header",
+            "required": true,
+            "schema":{
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Xendit invoice callback payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "579c8d61f23fa4ca35e52da4"
+                  },
+                  "external_id": {
+                    "type": "string",
+                    "example": "invoice_123124123"
+                  },
+                  "user_id": {
+                    "type": "string",
+                    "example": "5781d19b2e2385880609791c"
+                  },
+                  "is_high": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "payment_method": {
+                    "type": "string",
+                    "example": "BANK_TRANSFER"
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "PAID"
+                  },
+                  "merchant_name": {
+                    "type": "string",
+                    "example": "Xendit"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 50000
+                  },
+                  "paid_amount": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 50000
+                  },
+                  "bank_code": {
+                    "type": "string",
+                    "example": "PERMATA"
+                  },
+                  "paid_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2016-10-12T08:15:03.404Z"
+                  },
+                  "payer_email": {
+                    "type": "string",
+                    "example": "wildan@xendit.co"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "This is a description"
+                  },
+                  "adjusted_received_amount": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 47500
+                  },
+                  "fees_paid_amount": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 0
+                  },
+                  "updated": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2016-10-10T08:15:03.404Z"
+                  },
+                  "created": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2016-10-10T08:15:03.404Z"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "example": "IDR"
+                  },
+                  "payment_channel": {
+                    "type": "string",
+                    "example": "PERMATA"
+                  },
+                  "payment_destination": {
+                    "type": "string",
+                    "example": "888888888888"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook received and processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseProps"
+          }
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user1@mail.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "user1"
+          },
+          "password": {
+            "type": "string",
+            "writeOnly": true,
+            "example": "password123"
+          },
+          "role": {
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserRoleEnum"
+              }
+            ],
+            "readOnly": true
+          }
+        }
+      },
+      "Branch": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseProps"
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Branch 1"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+62-81234567890"
+          },
+          "address": {
+            "type": "string",
+            "example": "Jl. Jenderal Sudirman No. 5, Jakarta"
+          }
+        }
+      },
+      "Shipment": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseProps"
+          }
+        ],
+        "properties": {
+          "tracking_number": {
+            "type": "string",
+            "example": "GS-20250829171357SFE5DEIY",
+            "readOnly": true
+          },
+          "sender_id": {
+            "type": "integer",
+            "example": 1,
+            "readOnly": true
+          },
+          "sender_name": {
+            "type": "string",
+            "example": "Raden Raiden"
+          },
+          "sender_phone": {
+            "type": "string",
+            "example": "+6281234567890"
+          },
+          "sender_address": {
+            "type": "string",
+            "example": "Jl. Kaliurang KM 4, Depok, Sleman, DI Yogyakarta, Indonesia. 52811"
+          },
+          "recipient_name": {
+            "type": "string",
+            "example": "Kuda Laper"
+          },
+          "recipient_address": {
+            "type": "string",
+            "example": "Jl. Mangga Dua No. 2, Jakarta, Indonesia. 11110"
+          },
+          "recipient_phone": {
+            "type": "string",
+            "example": "+6289876543210"
+          },
+          "item_name": {
+            "type": "string",
+            "example": "Laptop"
+          },
+          "item_weight": {
+            "type": "number",
+            "format": "float",
+            "example": 2.5
+          },
+          "distance": {
+            "type": "number",
+            "format": "float",
+            "example": 15.3,
+            "readOnly": true
+          },
+          "base_price": {
+            "type": "integer",
+            "example": 10000,
+            "readOnly": true
+          },
+          "distance_price": {
+            "type": "integer",
+            "example": 15000,
+            "readOnly": true
+          },
+          "weight_price": {
+            "type": "integer",
+            "example": 5000,
+            "readOnly": true
+          },
+          "total_price": {
+            "type": "integer",
+            "example": 30000,
+            "readOnly": true
+          },
+          "status": {
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShipmentStatusEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "payment": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Payment"
+              }
+            ],
+            "readOnly": true
+          },
+          "histories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShipmentHistory"
+            },
+            "readOnly": true
+          }
+        }
+      },
+      "ShipmentHistory": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseProps"
+          }
+        ],
+        "properties": {
+          "shipment_id": {
+            "type": "integer",
+            "example": 1,
+            "readOnly": true
+          },
+          "status": {
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShipmentStatusEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "desc": {
+            "type": "string",
+            "example": "Shipment created",
+            "readOnly": true
+          },
+          "courier_id": {
+            "type": "integer",
+            "nullable": true,
+            "example": null,
+            "readOnly": true
+          },
+          "branch_id": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1,
+            "readOnly": true
+          },
+          "shipment": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Shipment"
+              }
+            ],
+            "readOnly": true
+          },
+          "branch": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Branch"
+              }
+            ],
+            "nullable": true,
+            "readOnly": true
+          },
+          "courier": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "nullable": true,
+            "readOnly": true
+          }
+        }
+      },
+      "BaseProps": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true,
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "example": "2025-08-29T17:13:58.621507Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true,
+            "example": "2025-08-29T17:13:58.621507Z"
+          }
+        }
+      },
+      "Payment": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseProps"
+          }
+        ],
+        "properties": {
+          "shipment_id": {
+            "type": "integer",
+            "example": 1,
+            "readOnly": true
+          },
+          "amount": {
+            "type": "integer",
+            "example": 30000,
+            "readOnly": true
+          },
+          "paid_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true,
+            "example": "2025-08-29T17:13:58.621507Z"
+          },
+          "expired_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true,
+            "example": "2025-08-29T17:13:58.621507Z"
+          },
+          "invoice_id": {
+            "type": "string",
+            "example": "invoice-123",
+            "readOnly": true
+          },
+          "external_id": {
+            "type": "string",
+            "example": "external-123",
+            "readOnly": true
+          },
+          "invoice_url": {
+            "type": "string",
+            "example": "https://invoice.url/123",
+            "readOnly": true
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentStatusEnum"
+              }
+            ],
+            "readOnly": true
+          }
+        }
+      },
+      "UserRoleEnum": {
+        "type": "string",
+        "enum": [
+          "SUPERADMIN",
+          "ADMIN",
+          "COURIER",
+          "CUSTOMER"
+        ],
+        "example": "CUSTOMER"
+      },
+      "ShipmentStatusEnum": {
+        "type": "string",
+        "enum": [
+          "PENDING_PAYMENT",
+          "READY_TO_PICKUP",
+          "PICKED_UP",
+          "IN_TRANSIT",
+          "DELIVERED",
+          "CANCELLED"
+        ],
+        "example": "PENDING_PAYMENT"
+      },
+      "PaymentStatusEnum": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "PAID",
+          "EXPIRED",
+          "CANCELLED"
+        ],
+        "example": "PENDING"
+      },
+      "BaseResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

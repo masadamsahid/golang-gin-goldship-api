@@ -5,6 +5,7 @@ go 1.24.5
 require github.com/joho/godotenv v1.5.1
 
 require (
+	github.com/bdpiprava/scalar-go v0.12.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/xendit/xendit-go/v7 v7.0.0 // indirect

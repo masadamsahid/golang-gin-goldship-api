@@ -16,6 +16,8 @@ import (
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/shipments"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/users"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/webhooks"
+
+	scalargo "github.com/bdpiprava/scalar-go"
 )
 
 func main() {
@@ -40,11 +42,38 @@ func main() {
 	})
 
 	api := r.Group("/api")
+
+	// Routes under "/api"
 	auth.Routes(api.Group("/auth"))
 	branches.Routes(api.Group("/branches"))
 	shipments.Routes(api.Group("/shipments"))
 	users.Routes(api.Group("/users"))
 	webhooks.Routes(api.Group("/webhooks"))
+
+	// OpenAPI
+	openAPIYAMLDocs, err := os.ReadFile("./docs/openapi-specs.json")
+	if err != nil {
+		log.Println("Error loading OpenAPI .yaml file:", err)
+	}
+
+	r.GET("/openapi", func(ctx *gin.Context) {
+		ctx.Data(http.StatusOK, "text/plain", openAPIYAMLDocs)
+	})
+
+	html, err := scalargo.NewV2(
+		scalargo.WithSpecURL("/openapi"),
+		scalargo.WithTheme(scalargo.ThemeBluePlanet),
+		scalargo.WithMetaDataOpts(
+			scalargo.WithTitle("🚚 Goldship Logistic API (Golang + Gin)"),
+		),
+	)
+	if err != nil {
+		log.Println("Error Scalar-Go:", err)
+	}
+
+	r.GET("/docs", func(ctx *gin.Context) {
+		ctx.Data(http.StatusOK, "text/html", []byte(html))
+	})
 
 	PORT := os.Getenv("APP_PORT")
 	if PORT == "" {
