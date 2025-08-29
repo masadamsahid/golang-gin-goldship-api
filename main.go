@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
 	"github.com/masadamsahid/golang-gin-goldship-api/helpers"
+	"github.com/masadamsahid/golang-gin-goldship-api/helpers/googlemap"
 	xenditService "github.com/masadamsahid/golang-gin-goldship-api/helpers/xendit-service"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/auth"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/branches"
@@ -25,6 +26,7 @@ import (
 
 func main() {
 	helpers.InitJWT()
+	googlemap.InitGoogleMapAPI()
 	xenditService.InitXendit()
 
 	defer db.StopDB()
