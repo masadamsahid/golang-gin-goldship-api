@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,10 +15,12 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
 	"github.com/masadamsahid/golang-gin-goldship-api/helpers"
+	"github.com/masadamsahid/golang-gin-goldship-api/helpers/googlemap"
 	"github.com/masadamsahid/golang-gin-goldship-api/helpers/models"
 	xenditService "github.com/masadamsahid/golang-gin-goldship-api/helpers/xendit-service"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/users/roles"
 	"github.com/xendit/xendit-go/v7/invoice"
+	"googlemaps.github.io/maps"
 )
 
 func CreateNewShipment(ctx *gin.Context) {
@@ -60,6 +63,37 @@ func CreateNewShipment(ctx *gin.Context) {
 
 	trackingNumber := helpers.GenerateTrackingNumber()
 
+	distance, err := googlemap.CalculateDistance(&maps.DistanceMatrixRequest{
+		Origins:      []string{body.SenderAddress},
+		Destinations: []string{body.RecipientAddress},
+	})
+	if err != nil {
+		log.Println("Failed to calculate distance", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	basePrice := 15000
+	additionalDistancePrice := 0
+	log.Println("Distance:", distance)
+	log.Println("Distance in meter:", distance.Meters)
+	if distance.Meters > 100000 {
+		log.Println("More than 100K")
+		additionalDistancePrice = int(math.Ceil(float64(distance.Meters-100000)/10000)) * 500
+	}
+
+	additionalWeightPrice := 0
+	if body.ItemWeight > 5 {
+		log.Println("More than 5kg")
+		additionalWeightPrice = int(math.Ceil((body.ItemWeight-5)*float64(distance.Meters)/10000)) * 100
+	}
+
+	log.Println("Distance:", basePrice, additionalDistancePrice, additionalWeightPrice)
+
+	totalPrice := basePrice + additionalDistancePrice + additionalWeightPrice
+
 	sqlCreateShipment := `
 		INSERT INTO shipments (
 			tracking_number,
@@ -73,8 +107,12 @@ func CreateNewShipment(ctx *gin.Context) {
 			item_name,
 			item_weight,
 			distance,
+			base_price,
+			distance_price,
+			weight_price,
+			total_price,
 			"status"
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 		RETURNING
 			id,
 			tracking_number,
@@ -88,6 +126,10 @@ func CreateNewShipment(ctx *gin.Context) {
 			item_name,
 			item_weight,
 			distance,
+			base_price,
+			distance_price,
+			weight_price,
+			total_price,
 			"status",
 			created_at,
 			updated_at
@@ -95,8 +137,11 @@ func CreateNewShipment(ctx *gin.Context) {
 
 	tx, txErr := db.DB.BeginTx(ctx, nil)
 	if txErr != nil {
-		// TODO: Handle response
-		log.Fatalf("Error beginning transaction: %v", txErr)
+		log.Printf("Error beginning transaction: %v\n", txErr)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
 	}
 	defer db.CloseTx(tx, txErr)
 
@@ -113,7 +158,11 @@ func CreateNewShipment(ctx *gin.Context) {
 		body.RecipientPhone,
 		body.ItemName,
 		body.ItemWeight,
-		body.Distance,
+		distance.Meters,
+		basePrice,
+		additionalDistancePrice,
+		additionalWeightPrice,
+		totalPrice,
 		models.StatusPendingPayment,
 	).Scan(
 		&newShipment.ID,
@@ -128,6 +177,10 @@ func CreateNewShipment(ctx *gin.Context) {
 		&newShipment.ItemName,
 		&newShipment.ItemWeight,
 		&newShipment.Distance,
+		&newShipment.BasePrice,
+		&newShipment.DistancePrice,
+		&newShipment.WeightPrice,
+		&newShipment.TotalPrice,
 		&newShipment.Status,
 		&newShipment.CreatedAt,
 		&newShipment.UpdatedAt,
@@ -142,7 +195,7 @@ func CreateNewShipment(ctx *gin.Context) {
 
 	createInvoiceReq := *invoice.NewCreateInvoiceRequest(
 		"INV-"+newShipment.TrackingNumber,
-		float64(20000), // TODO: change to dynamic rate using Google Map API or OpenCage. Currently let's use a flat price
+		float64(totalPrice),
 	)
 
 	createInvoiceReq.SetInvoiceDuration(30 * 60) // 30 mins

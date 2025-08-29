@@ -27,8 +27,8 @@ type CreateShipmentDto struct {
 	RecipientAddress string  `json:"recipient_address" binding:"required"`
 	RecipientPhone   string  `json:"recipient_phone" binding:"required"`
 	ItemName         string  `json:"item_name" binding:"required"`
-	ItemWeight       float64 `json:"item_weight" binding:"required"`
-	Distance         float64 `json:"distance" binding:"required"`
+	ItemWeight       float64 `json:"item_weight" binding:"required"` // in KG
+	// Distance         float64 `json:"distance" binding:"required"`
 }
 
 type TransitShipmentDto struct {

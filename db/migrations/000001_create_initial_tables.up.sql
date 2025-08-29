@@ -48,6 +48,10 @@ CREATE TABLE IF NOT EXISTS shipments (
   item_weight DECIMAL(10, 2) NOT NULL,
   distance DECIMAL(10, 2) NOT NULL,
   status shipment_status_enum NOT NULL DEFAULT 'PENDING_PAYMENT',
+  base_price INT NOT NULL,
+  distance_price INT NOT NULL,
+  weight_price INT NOT NULL,
+  total_price INT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP DEFAULT NULL,
   CONSTRAINT fk_shipments_user FOREIGN KEY (sender_id) REFERENCES users(id)

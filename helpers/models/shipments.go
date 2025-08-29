@@ -24,6 +24,10 @@ type Shipment struct {
 	ItemName         string  `json:"item_name"`
 	ItemWeight       float64 `json:"item_weight"`
 	Distance         float64 `json:"distance"`
+	BasePrice        int     `json:"base_price"`
+	DistancePrice    int     `json:"distance_price"`
+	WeightPrice      int     `json:"weight_price"`
+	TotalPrice       int     `json:"total_price"`
 	Status           string  `json:"status"`
 	CreatedAt        string  `json:"created_at"`
 	UpdatedAt        *string `json:"updated_at"` // Use pointer for nullable timestamp
