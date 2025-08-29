@@ -2,6 +2,7 @@ package shipments
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -960,4 +961,135 @@ func DeliverPackageByShipmentID(ctx *gin.Context) {
 		"message": "Shipment delivered successfully",
 	})
 
+}
+
+func TrackShipmentHistoriesByTrackingNumber(ctx *gin.Context) {
+	trackingNumber := ctx.Param("tracking_number")
+
+	var s models.Shipment
+	sqlGetShipment := `
+		SELECT
+			s.id,
+			s.tracking_number,
+			s.sender_id,
+			s.sender_name,
+			s.sender_phone,
+			s.sender_address,
+			s.recipient_name,
+			s.recipient_address,
+			s.recipient_phone,
+			s.item_name,
+			s.item_weight,
+			s.distance,
+			s.status,
+			s.created_at,
+			s.updated_at
+		FROM shipments s
+		WHERE s.tracking_number = $1
+		LIMIT 1
+	`
+
+	err := db.DB.QueryRow(sqlGetShipment, trackingNumber).Scan(
+		&s.ID,
+		&s.TrackingNumber,
+		&s.SenderID,
+		&s.SenderName,
+		&s.SenderPhone,
+		&s.SenderAddress,
+		&s.RecipientName,
+		&s.RecipientAddress,
+		&s.RecipientPhone,
+		&s.ItemName,
+		&s.ItemWeight,
+		&s.Distance,
+		&s.Status,
+		&s.CreatedAt,
+		&s.UpdatedAt,
+	)
+	if err != nil {
+		log.Println("Failed to get shipment by tracking number", err)
+		if err.Error() == sql.ErrNoRows.Error() {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"message": "Shipment not found",
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	var histories []models.ShipmentHistory
+	sqlGetHistories := `
+		SELECT
+			sh.id,
+			sh.shipment_id,
+			sh.status,
+			sh."desc",
+			sh.courier_id,
+			sh.branch_id,
+			sh.timestamp,
+			u.id,
+			u.username,
+			u.email,
+			u.role,
+			b.id,
+			b.name,
+			b.address,
+			b.phone
+		FROM shipment_histories sh
+		LEFT JOIN users u ON u.id = sh.courier_id
+		LEFT JOIN branches b ON b.id = sh.branch_id
+		WHERE sh.shipment_id = $1
+		ORDER BY timestamp DESC
+	`
+
+	rows, err := db.DB.Query(sqlGetHistories, s.ID)
+	if err != nil {
+		log.Println("Failed to get shipment histories", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal server error",
+		})
+		return
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var h models.ShipmentHistory
+		var c models.ShCourier
+		var b models.ShBranch
+		err := rows.Scan(
+			&h.ID,
+			&h.ShipmentID,
+			&h.Status,
+			&h.Desc,
+			&h.CourierID,
+			&h.BranchID,
+			&h.Timestamp,
+			&c.ID, &c.Username, &c.Email, &c.Role, // possible nulls
+			&b.ID, &b.Name, &b.Address, &b.Phone, // possible nulls
+		)
+		if err != nil {
+			log.Println("Failed to scan shipment history", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Internal server error",
+			})
+			return
+		}
+
+		if h.CourierID != nil {
+			h.Courier = &c
+		}
+		if h.BranchID != nil {
+			h.Branch = &b
+		}
+
+		histories = append(histories, h)
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Tracked successfully",
+		"data":    histories,
+	})
 }

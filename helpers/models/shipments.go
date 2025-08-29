@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 const (
 	StatusPendingPayment = "PENDING_PAYMENT"
 	StatusReadyToPickup  = "READY_TO_PICKUP"
@@ -41,6 +43,25 @@ type ShipmentHistory struct {
 	Timestamp  string `json:"timestamp"`
 
 	Shipment *Shipment `json:"shipment,omitempty"`
-	Courier  *User     `json:"courier,omitempty"`
-	Branch   *Branch   `json:"branch,omitempty"`
+
+	Courier *ShCourier `json:"courier,omitempty"`
+	Branch  *ShBranch  `json:"branch,omitempty"`
+}
+
+type ShBranch struct {
+	ID        *uint      `json:"id,omitempty"`
+	Name      *string    `json:"name,omitempty"`
+	Phone     *string    `json:"phone,omitempty"`
+	Address   *string    `json:"address,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
+type ShCourier struct {
+	ID        *uint      `json:"id,omitempty"`
+	Username  *string    `json:"username,omitempty"`
+	Email     *string    `json:"email,omitempty"`
+	Role      *string    `json:"string,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }

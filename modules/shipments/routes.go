@@ -14,4 +14,6 @@ func Routes(rg *gin.RouterGroup) {
 	rg.POST("/:id/pick-up", middlewares.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), PickupPackageByShipmentID)
 	rg.POST("/:id/transit", middlewares.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), TransitPackageByShipmentID)
 	rg.POST("/:id/deliver", middlewares.JwtAuthMiddleware(roles.RoleSuperAdmin, roles.RoleAdmin, roles.RoleCourier), DeliverPackageByShipmentID)
+
+	rg.GET("/track/:tracking_number", TrackShipmentHistoriesByTrackingNumber)
 }
