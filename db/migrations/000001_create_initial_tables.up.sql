@@ -1,7 +1,6 @@
 CREATE TYPE role_enum AS ENUM(
   'SUPERADMIN',
   'ADMIN',
-  'EMPLOYEE',
   'COURIER',
   'CUSTOMER'
 );
