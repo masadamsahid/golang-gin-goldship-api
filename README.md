@@ -20,6 +20,94 @@ This repository contains the backend API for the Goldship Logistic service.
     *   [Scalar Go](https://github.com/bdpiprava/scalar-go): For Scalar interactive API documentation.
     *   [Gin Swagger](https://github.com/swaggo/gin-swagger): For Swagger UI interactive API documentation.
 
+
+
+## 📁 Project's Directory Structure
+
+
+```cli
+golang-gin-goldship-api/
+├── db/
+│   └── migrations/
+├── docs/
+├── helpers/
+│   ├── commons/
+│   ├── googlemap/
+│   ├── middlewares/
+│   ├── models/
+│   └── xendit-service/
+└── modules/
+    ├── auth/
+    ├── branches/
+    ├── shipments/
+    ├── users/
+    │   └── roles/
+    └── webhooks/
+```
+
+<!-- Full tree (with files) -->
+<!--
+```cli
+.golang-gin-goldship-api/
+├── .env
+├── .env.example
+├── .gitignore
+├── README.md
+├── db/
+│   ├── db-connection.go
+│   └── migrations/
+│       ├── 000001_create_initial_tables.down.sql
+│       └── 000001_create_initial_tables.up.sql
+├── docs/
+│   └── openapi-specs.json
+├── go.mod
+├── go.sum
+├── helpers/
+│   ├── bcrypt.go
+│   ├── commons/
+│   │   └── model.go
+│   ├── googlemap/
+│   │   └── google.go
+│   ├── jwt.go
+│   ├── middlewares/
+│   │   └── middlewares.go
+│   ├── models/
+│   │   ├── branches.go
+│   │   ├── payments.go
+│   │   ├── shipments.go
+│   │   └── users.go
+│   ├── pagination.go
+│   ├── tracking-number.go
+│   ├── validators.go
+│   └── xendit-service/
+│       └── xendit-service.go
+├── main.go
+└── modules/
+    ├── auth/
+    │   ├── controllers.go
+    │   ├── dto.go
+    │   └── routes.go
+    ├── branches/
+    │   ├── controllers.go
+    │   ├── dto.go
+    │   └── routers.go
+    ├── shipments/
+    │   ├── controllers.go
+    │   ├── dto.go
+    │   └── routes.go
+    ├── users/
+    │   ├── controllers.go
+    │   ├── dto.go
+    │   ├── roles/
+    │   │   └── roles.go
+    │   └── routes.go
+    └── webhooks/
+        ├── controllers.go
+        ├── dto.go
+        └── routes.go
+```
+-->
+
 ## 🚀 Getting Started
 
 To get a local copy up and running, follow these simple steps.
@@ -75,6 +163,17 @@ To get a local copy up and running, follow these simple steps.
     go run main.go
     ```
     The server will start on the port specified in your `.env` file (e.g., `http://localhost:8080`).
+
+
+
+## 🏃‍♂️ Guide for Running DB Migrations
+
+Install [golang-migrate CLI](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate) first. Then run:
+
+```bash
+migrate -database "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}" -path database/migrations up
+```
+
 
 ## 📖 API Documentation
 
