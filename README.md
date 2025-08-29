@@ -1,7 +1,10 @@
 # 🚚 Goldship Logistic API (Golang + Gin)
 
-This repository contains the backend API for the Goldship Logistic service.
 
+<img width="580" height="360" alt="goldship-1ede5bfe090d45ae97ab135d875534dc" src="https://github.com/user-attachments/assets/232df093-b56d-41d1-b077-72903bfea7f3" />
+
+
+This repository contains the backend API for the Goldship Logistic service.
 
 ## 🛠️ Tech Stack
 
@@ -124,8 +127,12 @@ Here is a summary of the available API endpoints.
 | `GET` | `/health-check` | Retrieve the health status of the service | No |
 
 
-<br>
-<br>
+---
+
+Thank you for your interest in the Goldship Logistic API! 👋
+
+<img width="524" height="360" alt="goldship-9ef1643b412a4ce1afb93a9c54fea427" src="https://github.com/user-attachments/assets/f580869d-4f53-4a27-a0d9-02ce5de6cb40" />
+
 <br>
 <br>
 
