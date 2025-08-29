@@ -1,0 +1,129 @@
+# 🚚 Goldship Logistic API (Golang + Gin)
+
+This repository contains the backend API for the Goldship Logistic service.
+
+
+## 🛠️ Tech Stack
+
+*   **Language**: [Go](https://go.dev/)
+*   **Web Framework**: [Gin](https://gin-gonic.com/)
+*   **Database**: [PostgreSQL](https://www.postgresql.org/)
+*   **Authentication**: JWT (JSON Web Tokens)
+*   **External Services**:
+    *   [Google Maps API](https://developers.google.com/maps): For calculating distances and shipment pricing.
+    *   [Xendit](https://www.xendit.co/): For handling payment processing and invoices.
+*   **Documentatiions**:
+    *   [OpenAPI 3.0.8](https://www.openapis.org/): For API specification.
+    *   [Scalar Go](https://github.com/bdpiprava/scalar-go): For Scalar interactive API documentation.
+    *   [Gin Swagger](https://github.com/swaggo/gin-swagger): For Swagger UI interactive API documentation.
+
+## 🚀 Getting Started
+
+To get a local copy up and running, follow these simple steps.
+
+### Prerequisites
+
+*   Go (version 1.24 or later)
+*   PostgreSQL
+*   A `.env` file with the necessary environment variables.
+
+### Installation & Running
+
+1.  **Clone the repository**
+    ```sh
+    git clone https://github.com/masadamsahid/golang-gin-goldship-api.git
+    cd golang-gin-goldship-api
+    ```
+
+2.  **Create an environment file**
+    Create a `.env` file in the root directory and add the required environment variables for the database, JWT secret, Google Maps API key, and Xendit credentials.
+    ```env
+    # Server
+    PORT=8080
+
+    # Database
+    DB_HOST=localhost
+    DB_PORT=5432
+    DB_USER=your_db_user
+    DB_PASSWORD=your_db_password
+    DB_NAME=goldship_db
+
+    # JWT
+    JWT_SECRET_KEY=your_jwt_secret
+
+    # External Services
+    GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+    XENDIT_API_KEY=your_xendit_api_key
+    XENDIT_CALLBACK_TOKEN=your_xendit_callback_token
+    ```
+
+3.  **Install dependencies**
+    ```sh
+    go mod tidy
+    ```
+
+4.  **Run the application**
+    ```sh
+    go run main.go
+    ```
+    The server will start on the port specified in your `.env` file (e.g., `http://localhost:8080`).
+
+## 📖 API Documentation
+
+The full, interactive API documentation is generated from the `docs/openapi-specs.json` file. You can view it by running the application and navigating to the appropriate endpoint, typically `/docs` (Scalar) or `/swagger/index.html` (Swagger).
+
+## 🛣️ API Endpoints
+
+Here is a summary of the available API endpoints.
+
+**Auth**
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/auth/register` | Register as new user | No |
+| `POST` | `/api/auth/login` | Login as a user | No |
+
+**Users**
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/users/my-shipments` | Get all shipments for the authenticated user | Yes |
+| `POST` | `/api/{username}/change-role` | Change user role (SUPERADMIN/ADMIN only) | Yes |
+
+**Branches**
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/branches` | Create a new branch (ADMIN/SUPERADMIN only) | Yes |
+| `GET` | `/api/branches` | Get all branches | No |
+| `GET` | `/api/branches/{id}` | Get a branch by ID | No |
+| `PUT` | `/api/branches/{id}` | Update a branch (ADMIN/SUPERADMIN only) | Yes |
+| `DELETE` | `/api/branches/{id}` | Delete a branch (ADMIN/SUPERADMIN only) | Yes |
+
+**Shipments**
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/shipments` | Create a new shipment | Yes |
+| `GET` | `/api/shipments` | Get all shipments (Staff/Courier only) | Yes |
+| `POST` | `/api/shipments/{id}/cancel` | Cancel a shipment (Sender only) | Yes |
+| `POST` | `/api/shipments/{id}/pick-up` | Mark a shipment as picked up (Staff/Courier only) | Yes |
+| `POST` | `/api/shipments/{id}/transit` | Mark a shipment as in transit (Staff/Courier only) | Yes |
+| `POST` | `/api/shipments/{id}/deliver` | Mark a shipment as delivered (Staff/Courier only) | Yes |
+| `GET` | `/api/shipments/track/{tracking_number}` | Get shipment history by tracking number | No |
+
+**Webhooks**
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/webhooks/xendit` | Handles incoming payment status from Xendit | Header Token |
+
+**Health Check**
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/health-check` | Retrieve the health status of the service | No |
+
+
+<br>
+<br>
+<br>
+<br>
+
+---
+
+🧙‍♂️✨ Wizardly created by [masadamsahid](https://github.com/masadamsahid)
