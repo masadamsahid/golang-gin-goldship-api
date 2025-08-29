@@ -18,6 +18,9 @@ import (
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/webhooks"
 
 	scalargo "github.com/bdpiprava/scalar-go"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -60,6 +63,7 @@ func main() {
 		ctx.Data(http.StatusOK, "text/plain", openAPIYAMLDocs)
 	})
 
+	// Scalar UI
 	html, err := scalargo.NewV2(
 		scalargo.WithSpecURL("/openapi"),
 		scalargo.WithTheme(scalargo.ThemeBluePlanet),
@@ -74,6 +78,12 @@ func main() {
 	r.GET("/docs", func(ctx *gin.Context) {
 		ctx.Data(http.StatusOK, "text/html", []byte(html))
 	})
+
+	// Gin-Swagger
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(
+		swaggerFiles.Handler,
+		ginSwagger.URL("/openapi"),
+	))
 
 	PORT := os.Getenv("APP_PORT")
 	if PORT == "" {
