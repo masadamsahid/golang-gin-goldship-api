@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/xendit/xendit-go/v7/invoice"
 
 	"github.com/joho/godotenv"
 	"github.com/masadamsahid/golang-gin-goldship-api/db"
+	"github.com/masadamsahid/golang-gin-goldship-api/helpers"
 	xenditService "github.com/masadamsahid/golang-gin-goldship-api/helpers/xendit-service"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/auth"
 	"github.com/masadamsahid/golang-gin-goldship-api/modules/branches"
@@ -24,15 +24,8 @@ import (
 )
 
 func main() {
+	helpers.InitJWT()
 	xenditService.InitXendit()
-
-	log.Println(
-		string(invoice.INVOICESTATUS_PENDING),
-		invoice.INVOICESTATUS_PAID,
-		invoice.INVOICESTATUS_SETTLED,
-		invoice.INVOICESTATUS_EXPIRED,
-		invoice.INVOICESTATUS_XENDIT_ENUM_DEFAULT_FALLBACK,
-	)
 
 	defer db.StopDB()
 	db.ConnectDB()

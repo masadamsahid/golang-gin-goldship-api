@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,8 +14,15 @@ import (
 // var randJWTSecret = rand.Text()
 // var randJWTSecretArrOfByte = []byte(randJWTSecret)
 
-var jwtSecret = "*&(HD!)&EO"
-var jwtSecretArrOfByte = []byte(jwtSecret)
+var jwtSecret string
+var jwtSecretArrOfByte []byte
+
+func InitJWT() {
+	jwtSecret = os.Getenv("JWT_SECRET_KEY")
+	jwtSecretArrOfByte = []byte(jwtSecret)
+
+	// log.Println("JWT secret:", jwtSecret)
+}
 
 type AuthPayload struct {
 	ID       uint   `json:"id"`
