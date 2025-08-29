@@ -39,22 +39,27 @@ To get a local copy up and running, follow these simple steps.
     Create a `.env` file in the root directory and add the required environment variables for the database, JWT secret, Google Maps API key, and Xendit credentials.
     ```env
     # Server
-    PORT=8080
+    APP_PORT=8080
 
     # Database
-    DB_HOST=localhost
+    DB_HOST=
+    DB_USER=
+    DB_PASSWORD=
+    DB_NAME=goldship_go_db
     DB_PORT=5432
-    DB_USER=your_db_user
-    DB_PASSWORD=your_db_password
-    DB_NAME=goldship_db
+    DB_SSL_MODE=disable
+
+    DB_URL="postgres://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}?sslmode={SSL_MODE}"
 
     # JWT
-    JWT_SECRET_KEY=your_jwt_secret
+    JWT_SECRET_KEY=""
 
-    # External Services
-    GOOGLE_MAPS_API_KEY=your_google_maps_api_key
-    XENDIT_API_KEY=your_xendit_api_key
-    XENDIT_CALLBACK_TOKEN=your_xendit_callback_token
+    # Xendit
+    XENDIT_SECRET_API_KEY=""
+    XENDIT_WEBHOOK_VERIFICATION_TOKEN=""
+
+    # Google Maps
+    GOOGLE_MAP_API_KEY=""
     ```
 
 3.  **Install dependencies**
