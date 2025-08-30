@@ -3,7 +3,7 @@
   "info": {
     "title": "🚚 Goldship Logistic API (Golang + Gin)",
     "version": "1.0.0",
-    "description": "📃 API documentation for the Goldship Logistic service. Built with :\n\n - [Golang](https://go.dev/)\n\n - [Gin](https://gin-gonic.com/)\n\n - [Google Maps API](https://developers.google.com/maps)\n\n - [Xendit Payment Gateway](https://www.xendit.co/)\n\n - [PostgreSQL](https://www.postgresql.org/)\n\n --- \n\n 🧙‍♂️✨ Wizardly created by [masadamsahid](https://github.com/masadamsahid)"
+    "description": "📃 API documentation for the Goldship Logistic service. Built with :\n\n - [Golang](https://go.dev/)\n\n - [Gin](https://gin-gonic.com/)\n\n - [Google Maps API](https://developers.google.com/maps)\n\n - [Xendit Payment Gateway](https://www.xendit.co/)\n\n - [PostgreSQL](https://www.postgresql.org/) \n\n <img width=\"580\" height=\"360\" alt=\"goldship-6d1d95f616e34c9abe072d8f54478cba\" src=\"https://github.com/user-attachments/assets/3adde587-210b-442f-a9e0-0b34717e2257\" /> \n\n --- \n\n 🧙‍♂️✨ Wizardly created by [masadamsahid](https://github.com/masadamsahid)"
   },
   "servers": [
     {
