@@ -698,6 +698,52 @@
         }
       }
     },
+    "/api/shipments/{id}": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get shipment details by ID",
+        "description": "Retrieve the details of a single shipment by its ID. Requires ADMIN, SUPERADMIN, COURIER, or the sender of the shipment role.",
+        "tags": [
+          "Shipments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Shipment ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipment details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Shipment retrieved successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Shipment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/shipments/{id}/cancel": {
       "post": {
         "security": [
