@@ -139,7 +139,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "email": {
+                  "username_email": {
                     "type": "string",
                     "example": "user1@mail.com"
                   },
