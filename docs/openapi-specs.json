@@ -239,7 +239,7 @@
         }
       }
     },
-    "/api/{username}/change-role": {
+    "/api/users/{username}/change-role": {
       "post": {
         "security": [
           {
